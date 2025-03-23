@@ -2,6 +2,7 @@
 
 import '../models/lettre.dart';
 import 'dart:ui';
+import 'game_controllers.dart';
 
 class PlacementValidator {
   static const int boardSize = 15;
@@ -41,19 +42,16 @@ class PlacementValidator {
   }
 
   /// Vérifie si c'est le premier tour (plateau vide)
-  static bool estPremierTour(List<List<Lettre?>> board) {
-    for (var ligne in board) {
-      for (var caseLettre in ligne) {
-        if (caseLettre != null) return false;
-      }
-    }
-    return true;
+
+  static bool estPremierTour(GameController controller ) {
+    return controller.estPremierTour();
   }
 
   /// Valide le placement actuel selon toutes les règles
   static bool validerPlacement(
       List<List<Lettre?>> board,
       List<Offset> lettresPosees,
+      GameController controller,
       ) {
     if (lettresPosees.isEmpty) return false;
 
@@ -61,7 +59,7 @@ class PlacementValidator {
       return false;
     }
 
-    if (estPremierTour(board)) {
+    if (estPremierTour(controller)) {
       return toucheCentre(lettresPosees);
     } else {
       return estConnecte(board, lettresPosees);
