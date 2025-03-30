@@ -28,13 +28,18 @@ class PlateauWidget extends StatelessWidget {
         int col = index % boardSize;
 
         return DragTarget<Lettre>(
-          onAccept: (lettre) => onLettrePlacee(lettre, row, col),
+          onAccept: (lettre) {
+            if (board[row][col] == null) {
+              onLettrePlacee(lettre, row, col);
+            }
+          },
           builder: (context, candidateData, rejectedData) => Container(
             width: tileSize,
             height: tileSize,
             decoration: BoxDecoration(
-              color: board[row][col] != null ? Colors.orange[300] : Colors.white,
-              border: Border.all(color: Colors.grey),
+              color: board[row][col] != null ? Colors.brown[300] : Colors.white,
+              border: Border.all(color: Colors.brown),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: Center(
               child: Text(

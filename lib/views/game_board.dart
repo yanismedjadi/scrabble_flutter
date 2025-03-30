@@ -7,6 +7,7 @@ import '../controllers/game_controllers.dart';
 import '../controllers/placement_validator.dart';
 import 'widgets/board.dart';
 import 'dart:ui' show Color, Offset;
+import '../controllers/placement_validator.dart';
 
 class GameBoardScreen extends StatefulWidget {
   @override
@@ -18,6 +19,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   late GameController controller;
   List<List<Lettre?>> board = List.generate(boardSize, (_) => List.filled(boardSize, null));
   List<Offset> lettresPoseesCeTour = [];
+  List<Offset> lettresDejaPosees = [];
 
   @override
   void initState() {
@@ -34,7 +36,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     double tileSize = gridSize / boardSize;
 
     return Scaffold(
-      appBar: AppBar(title: Text('Tour ${controller.numeroTour} - ${controller.joueurActuel.name}')),
+      appBar: AppBar(title: Text('${controller.joueurActuel.name}')),
       body: Column(
         children: [
           // Lettres du joueur
@@ -84,25 +86,16 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
               onPressed: () {
-                bool estValide = PlacementValidator.validerPlacement(board, lettresPoseesCeTour, controller);
-
+                bool estValide = controller.validerMot(board, lettresDejaPosees, lettresPoseesCeTour);
                 if (estValide) {
-                  print("✅ Mot valide !");
-                  print("👜 Lettres restantes dans le sac : ${controller.sacLettres.list.length}");
-
-                  // TODO: Calcul des points ici si souhaité
-                  controller.completerLettres();
-                  controller.passerAuJoueurSuivant();
-                  lettresPoseesCeTour.clear();
-
-                  if (controller.estPartieTerminee()) {
-                    print("🏁 Partie terminée !");
-                    // TODO: Naviguer vers un écran de fin ou afficher les scores
-                  }
-
+                  lettresDejaPosees.addAll(lettresPoseesCeTour);
+                  print(PlacementValidator.calculScore(board, lettresDejaPosees, lettresPoseesCeTour));
+                  controller.finDeTour(board, lettresPoseesCeTour);
                   setState(() {});
                 } else {
-                  print("❌ Mot invalide : placement incorrect.");
+                  controller.retirerLettresPosees(board, lettresPoseesCeTour);
+                  lettresPoseesCeTour.clear();
+                  setState(() {});
                 }
               },
               child: Text("Envoyer le mot"),

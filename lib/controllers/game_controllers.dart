@@ -1,6 +1,9 @@
+import 'dart:ui';
+
 import '../models/player.dart';
 import '../models/sac_lettres.dart';
 import '../models/lettre.dart';
+import 'placement_validator.dart';
 
 class GameController {
   final List<Player> joueurs;
@@ -57,4 +60,34 @@ class GameController {
   }
 
   List<Player> get getJoueurs => joueurs;
+
+  bool validerMot(List<List<Lettre?>> board, List<Offset> dejaPosees, List<Offset> positions) {
+    if (positions.isEmpty) return false;
+    if (estPremierTour()) {
+      return PlacementValidator.estAligne(positions) &&
+          PlacementValidator.toucheCentre(positions);
+    }else {
+      return PlacementValidator.estAligne(positions) &&
+              PlacementValidator.estConnecte(board, dejaPosees, positions);
+    }
+  }
+  void retirerLettresPosees(
+      List<List<Lettre?>> board, List<Offset> lettresPoseesCeTour) {
+    for (final pos in lettresPoseesCeTour) {
+      int row = pos.dx.toInt();
+      int col = pos.dy.toInt();
+
+      final lettre = board[row][col];
+      if (lettre != null) {
+        joueurActuel.letters.add(lettre);
+        board[row][col] = null;
+      }
+    }
+  }
+
+  void finDeTour(List<List<Lettre?>> board, List<Offset> lettresPoseesCeTour) {
+    completerLettres();
+    lettresPoseesCeTour.clear();
+    passerAuJoueurSuivant();
+  }
 }
