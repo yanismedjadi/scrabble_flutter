@@ -1,4 +1,4 @@
-import 'package:scrabble_project/models/lettre.dart';
+import 'lettre.dart';
 
 class Player {
   final String name;
@@ -10,4 +10,9 @@ class Player {
     this.letters = const [],
     this.score = 0,
   });
+
+  void updateScore(int newScore) {
+    this.score = this.score + newScore;
+  }
+
 }

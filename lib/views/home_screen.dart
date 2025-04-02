@@ -8,7 +8,7 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: Colors.grey[300],
       appBar: AppBar(
         title: Text('Scrabble'),
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.white,
         centerTitle: true,
       ),
       body: Center(
