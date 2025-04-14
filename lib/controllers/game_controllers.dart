@@ -7,7 +7,6 @@ import 'placement_validator.dart';
 import 'verificateur_mots.dart';
 import 'score_calculator.dart';
 
-
 class GameController {
   final List<Player> joueurs;
   final SacLettres sacLettres;
@@ -16,6 +15,12 @@ class GameController {
   int pointsCeTour = 0;
 
   VerificateurMots verificateur = VerificateurMots('assets/dictionnaire.txt');
+
+  GameController.fromPlayers(this.joueurs) : sacLettres = SacLettres() {
+    for (var joueur in joueurs) {
+      joueur.letters = List.generate(7, (_) => sacLettres.tirerLettre()!).whereType<Lettre>().toList();
+    }
+  }
 
   GameController(Player joueur1, Player joueur2)
       : joueurs = [joueur1, joueur2],
@@ -74,13 +79,14 @@ class GameController {
           PlacementValidator.toucheCentre(positions) &&
           PlacementValidator.allConnected(board, positions) &&
           verificateur.verifierMots(board, positions);
-    }else {
+    } else {
       return PlacementValidator.estAligne(positions) &&
-              PlacementValidator.estConnecte(board, dejaPosees, positions) &&
-              PlacementValidator.allConnected(board, positions) &&
-              verificateur.verifierMots(board, positions);
+          PlacementValidator.estConnecte(board, dejaPosees, positions) &&
+          PlacementValidator.allConnected(board, positions) &&
+          verificateur.verifierMots(board, positions);
     }
   }
+
   void retirerLettresPosees(
       List<List<Lettre?>> board, List<Offset> lettresPoseesCeTour) {
     for (final pos in lettresPoseesCeTour) {

@@ -48,7 +48,7 @@ class PlateauWidget extends StatelessWidget {
       case"★" :
         return const Color.fromARGB(255, 255, 255, 7);
       default:
-        return const Color(0xFF6B8E23) ;///fromARGB(255, 170, 245, 174);
+        return const Color(0xFF6B8E23) ;
 
     }
   }

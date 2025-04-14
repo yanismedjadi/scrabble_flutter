@@ -1,5 +1,3 @@
-// 📄 lib/views/game_board.dart
-
 import 'package:flutter/material.dart';
 import '../models/player.dart';
 import '../models/lettre.dart';
@@ -11,6 +9,10 @@ import '../controllers/score_calculator.dart';
 import '../controllers/verificateur_mots.dart';
 
 class GameBoardScreen extends StatefulWidget {
+  final List<Player> players;
+
+  const GameBoardScreen({super.key, required this.players});
+
   @override
   _GameBoardScreenState createState() => _GameBoardScreenState();
 }
@@ -27,10 +29,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   @override
   void initState() {
     super.initState();
-    controller = GameController(
-      Player(name: "Joueur 1"),
-      Player(name: "Joueur 2"),
-    );
+    controller = GameController.fromPlayers(widget.players);
   }
 
   @override
@@ -60,10 +59,10 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
               children: controller.joueurActuel.letters.map((lettre) {
                 return Draggable<Lettre>(
                   data: lettre,
-                  feedback: Material(child: _lettreTile(lettre, const Color.fromARGB(255, 120, 220, 227))),
+                  feedback: Material(child: _lettreTile(lettre, const Color(0xFF8B5A2B))),
                   childWhenDragging: Opacity(
                     opacity: 0.5,
-                    child: _lettreTile(lettre, const Color.fromARGB(255, 120, 220, 227)),
+                    child: _lettreTile(lettre, const Color(0xFF8B5A2B)),
                   ),
                   child: _lettreTile(lettre, const Color(0xFF8B5A2B)),
                 );
