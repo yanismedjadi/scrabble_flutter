@@ -1,46 +1,62 @@
-import 'dart:math';
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'lettre.dart';
 
 class SacLettres {
   List<Lettre> lettres = [];
+  final String langue;
 
-  SacLettres() {
-    lettres = _creerLettres();
+  SacLettres({required this.langue});
+
+  Future<void> initialiser() async {
+    try {
+      final chemin = _getCheminDistribution();
+      final jsonString = await rootBundle.loadString(chemin);
+      final distribution = jsonDecode(jsonString) as Map<String, dynamic>;
+
+      lettres = distribution.entries.expand((entry) {
+        final lettre = entry.key;
+        final valeur = entry.value['valeur'] as int;
+        final quantite = entry.value['quantite'] as int;
+        
+        return List.generate(
+          quantite, 
+          (_) => Lettre(lettre: lettre, valeur: valeur,quantite: 1)
+        );
+      }).toList();
+
+      lettres.shuffle();
+      print('Sac initialisé avec ${lettres.length} lettres ($langue)');
+    } catch (e) {
+      throw Exception('Erreur de chargement des lettres: $e');
+    }
   }
 
-  List<Lettre> _creerLettres() {
-    List<Lettre> sac = [];
-
-    final distribution = {
-      'A': {'valeur': 1, 'quantite': 9}, 'B': {'valeur': 3, 'quantite': 2},
-      'C': {'valeur': 3, 'quantite': 2}, 'D': {'valeur': 2, 'quantite': 3},
-      'E': {'valeur': 1, 'quantite': 15}, 'F': {'valeur': 4, 'quantite': 2},
-      'G': {'valeur': 2, 'quantite': 2}, 'H': {'valeur': 4, 'quantite': 2},
-      'I': {'valeur': 1, 'quantite': 8}, 'J': {'valeur': 8, 'quantite': 1},
-      'K': {'valeur': 10, 'quantite': 1}, 'L': {'valeur': 1, 'quantite': 5},
-      'M': {'valeur': 2, 'quantite': 3}, 'N': {'valeur': 1, 'quantite': 6},
-      'O': {'valeur': 1, 'quantite': 6}, 'P': {'valeur': 3, 'quantite': 2},
-      'Q': {'valeur': 8, 'quantite': 1}, 'R': {'valeur': 1, 'quantite': 6},
-      'S': {'valeur': 1, 'quantite': 6}, 'T': {'valeur': 1, 'quantite': 6},
-      'U': {'valeur': 1, 'quantite': 6}, 'V': {'valeur': 4, 'quantite': 2},
-      'W': {'valeur': 10, 'quantite': 1}, 'X': {'valeur': 10, 'quantite': 1},
-      'Y': {'valeur': 10, 'quantite': 1}, 'Z': {'valeur': 10, 'quantite': 1},
-      '?': {'valeur': 0, 'quantite': 2},
-    };
-
-    distribution.forEach((lettre, data) {
-      for (int i = 0; i < data['quantite']!; i++) {
-        sac.add(Lettre(lettre: lettre, valeur: data['valeur']!, quantite: 1));
-      }
-    });
-    return sac;
+  String _getCheminDistribution() {
+    switch (langue) {
+      case 'Kabyle':
+        return 'assets/lettre_kb.json';
+      case 'Anglais':
+        return 'assets/lettres_en.json';
+      case 'Français':
+      default:
+        return 'assets/lettres_fr.json';
+    }
   }
 
-  List<Lettre> get list => lettres;
-  Lettre? tirerLettre() {
-    if (lettres.isEmpty) return null;
-    final index = Random().nextInt(lettres.length);
-    return lettres.removeAt(index);
+  String getCheminDictionnaire() {
+    switch (langue) {
+      case 'Kabyle':
+        return 'assets/dictionnaire_kb.txt';
+      case 'Anglais':
+        return 'assets/dictionnaire_en.txt';
+      case 'Français':
+      default:
+        return 'assets/dictionnaire_fr.txt';
+    }
   }
+
+  Lettre? tirerLettre() => lettres.isNotEmpty ? lettres.removeLast() : null;
+
   void ajouterLettre(Lettre lettre) => lettres.add(lettre);
 }

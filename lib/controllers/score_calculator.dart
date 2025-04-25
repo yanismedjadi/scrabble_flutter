@@ -5,8 +5,11 @@ class ScoreCalculator {
   static const int boardSize = 15;
   final List<List<String?>> bonusBoard = List.generate(15, (_) => List.filled(15, null));
 
+  static List<Offset> bonusUtilisesCeTour = [];
+
   ///Fonction principale de calcul du score
-  static int calculScore(List<List<Lettre?>> board ,List<Offset> dejaPosees, List<Offset> poseesCeTour){
+  static int calculScore(List<List<Lettre?>> board ,List<Offset> dejaPosees, List<Offset> poseesCeTour
+      , List<Offset> bonusDejaUtilises){
     int score = 0;
     List<Offset>? list = (poseesCeTour.isNotEmpty) ? poseesCeTour : null;
     bool isHorizontal =  poseesCeTour.every((p) => p.dx == poseesCeTour[0].dx);
@@ -16,22 +19,24 @@ class ScoreCalculator {
     }else {
       indiceLigneACalculer = poseesCeTour[0].dy.toInt();
     }
-    score = _scoreLigne(board, isHorizontal, indiceLigneACalculer, dejaPosees, null);
+    score = _scoreLigne(board, isHorizontal, indiceLigneACalculer, dejaPosees, null, bonusDejaUtilises);
     if (isHorizontal) {
       for (final pos in poseesCeTour) {
         if (dejaPosees.contains(Offset(pos.dx+1, pos.dy))
             || dejaPosees.contains(Offset(pos.dx-1, pos.dy))) {
-          score += _scoreLigne(board, !isHorizontal, pos.dy.toInt(), dejaPosees, list);
+          score += _scoreLigne(board, !isHorizontal, pos.dy.toInt(), dejaPosees, list, bonusDejaUtilises);
         }
       }
     }else {
       for (final pos in poseesCeTour) {
         if (dejaPosees.contains(Offset(pos.dx, pos.dy+1))
             || dejaPosees.contains(Offset(pos.dx, pos.dy-1))) {
-          score += _scoreLigne(board, !isHorizontal, pos.dx.toInt(), dejaPosees, list);
+          score += _scoreLigne(board, !isHorizontal, pos.dx.toInt(), dejaPosees, list, bonusDejaUtilises);
         }
       }
     }
+    bonusDejaUtilises.addAll(bonusUtilisesCeTour);
+    bonusUtilisesCeTour.clear();
     return score;
   }
 
@@ -45,35 +50,48 @@ class ScoreCalculator {
 
   ///OUTILS
   static int _scoreLigne(List<List<Lettre?>> board, bool isHorizontal, int indice
-      , List<Offset> dejaPosees,List<Offset>? possesCeTour) {
+      , List<Offset> dejaPosees,List<Offset>? possesCeTour, List<Offset> bonusDejaUtilises) {
     int total = 0;
     int multiplicateurMot = 1;
     for (final p in dejaPosees) {
       if (_compar(isHorizontal, indice, p)) {
         Lettre? lettre = board[p.dx.toInt()][p.dy.toInt()]!;
-        bool isBonusActive = possesCeTour== null || ( possesCeTour != null && possesCeTour.contains(p));
+        bool isBonusActive = !(bonusDejaUtilises.contains(p));
         if (isBonusActive) {
-          print('is active for ${p}');
           String? bonus = _getBonusAtPosition(p);
           switch (bonus) {
             case "DL":
+              print("${lettre.lettre} : ${lettre.valeur}");
               total += lettre.valeur * 2;
+              bonusUtilisesCeTour.add(p);
+              ///bonusDejaUtilises.add(p);
               break;
             case "TL":
+              print("${lettre.lettre} : ${lettre.valeur}");
               total += lettre.valeur * 3;
+              bonusUtilisesCeTour.add(p);
+              ///bonusDejaUtilises.add(p);
               break;
             case "DW":
+              print("${lettre.lettre} : ${lettre.valeur}");
               total += lettre.valeur;
               multiplicateurMot *= 2;
+              bonusUtilisesCeTour.add(p);
+              ///bonusDejaUtilises.add(p);
               break;
             case "TW":
+              print("${lettre.lettre} : ${lettre.valeur}");
               total += lettre.valeur;
               multiplicateurMot *= 3;
+              bonusUtilisesCeTour.add(p);
+              ///bonusDejaUtilises.add(p);
               break;
             default:
+              print("${lettre.lettre} : ${lettre.valeur}");
               total += lettre.valeur;
           }
         }else{
+          print("${lettre.lettre} : ${lettre.valeur}");
           total += lettre.valeur;
         }
 
@@ -91,10 +109,10 @@ class ScoreCalculator {
       '3,3': 'DW',
       '4,4': 'DW',
       '5,5': 'DW',
-      '2,13': 'DW',
-      '3,12': 'DW',
-      '4,11': 'DW',
-      '5,10': 'DW',
+      '1,13': 'DW',
+      '2,12': 'DW',
+      '3,11': 'DW',
+      '4,10': 'DW',
       '7,7': 'DW',
       '10,4': 'DW',
       '11,3': 'DW',
@@ -122,7 +140,6 @@ class ScoreCalculator {
       '3,0': 'DL',
       '3,7': 'DL',
       '3,14': 'DL',
-      '11,0': 'DL',
       '6,2': 'DL',
       '6,6': 'DL',
       '6,8': 'DL',
@@ -145,7 +162,7 @@ class ScoreCalculator {
       '1,9': 'TL',
       '5,1': 'TL',
       '5,5': 'TL',
-      '5,7': 'TL',
+      '5,9': 'TL',
       '5,13': 'TL',
       '9,1': 'TL',
       '9,5': 'TL',

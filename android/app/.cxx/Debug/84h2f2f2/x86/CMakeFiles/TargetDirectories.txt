@@ -1,0 +1,2 @@
+/home/medjadiy/scrabble_project/android/app/.cxx/Debug/84h2f2f2/x86/CMakeFiles/edit_cache.dir
+/home/medjadiy/scrabble_project/android/app/.cxx/Debug/84h2f2f2/x86/CMakeFiles/rebuild_cache.dir

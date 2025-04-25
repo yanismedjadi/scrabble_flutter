@@ -48,7 +48,7 @@ class PlateauWidget extends StatelessWidget {
       case"★" :
         return const Color.fromARGB(255, 255, 255, 7);
       default:
-        return const Color(0xFF6B8E23) ;
+        return const Color(0xFF6B8E23) ;///fromARGB(255, 170, 245, 174);
 
     }
   }
@@ -94,7 +94,7 @@ class PlateauWidget extends StatelessWidget {
           onDragCompleted: () => onLettreRetiree(lettre, row, col),
           child: _lettreTile(lettre, const Color(0xFF8B5A2B), isDraggable: true),
         )
-            : _lettreTile(lettre, const Color(0xFF8B5A2B));
+            : _lettreTile(lettre, const Color.fromARGB(255, 204, 149, 97));
       },
     );
   }
@@ -136,7 +136,7 @@ class PlateauWidget extends StatelessWidget {
         children: [
           Center(
             child: Text(
-              lettre.lettre,
+              lettre.valeur > 0 ? lettre.lettre :lettre.remplace.toString(),
               style: const TextStyle(
                 fontSize: 20,
                 color: Colors.white,

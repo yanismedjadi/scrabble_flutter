@@ -1,8 +1,24 @@
 import 'package:flutter/material.dart';
 import 'views/home_screen.dart';
+import 'package:provider/provider.dart';
+import '../controllers/game_controllers.dart';
+import '../models/player.dart';
 
 void main() {
-  runApp(ScrabbleApp());
+  const langueParDefaut = 'Français'; 
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => GameController.fromPlayers(
+         [
+          Player(name: "Joueur 1"),
+          Player(name: "Joueur 2"),
+        ],
+        langueParDefaut,
+      ),
+      child: ScrabbleApp(),
+    ),
+  );
 }
 
 class ScrabbleApp extends StatelessWidget {

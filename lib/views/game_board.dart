@@ -2,17 +2,22 @@ import 'package:flutter/material.dart';
 import '../models/player.dart';
 import '../models/lettre.dart';
 import '../controllers/game_controllers.dart';
-import '../controllers/placement_validator.dart';
 import 'widgets/board.dart';
 import 'dart:ui' show Color, Offset;
 import '../controllers/score_calculator.dart';
-import '../controllers/verificateur_mots.dart';
+import 'end_screen.dart';
+
+import 'widgets/joker.dart';
 
 class GameBoardScreen extends StatefulWidget {
   final List<Player> players;
+  final String langue;
 
-  const GameBoardScreen({super.key, required this.players});
-
+const GameBoardScreen({
+    super.key, 
+    required this.players,
+    required this.langue,
+  });
   @override
   _GameBoardScreenState createState() => _GameBoardScreenState();
 }
@@ -24,19 +29,29 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   List<Offset> lettresPoseesCeTour = [];
   List<Offset> lettresDejaPosees = [];
   String? _errorMessage;
-  final verificateur = VerificateurMots('assets/dictionnaire.txt');
+  
 
   @override
   void initState() {
-    super.initState();
-    controller = GameController.fromPlayers(widget.players);
+  super.initState();
+  controller = GameController.fromPlayers(widget.players,widget.langue);
+  controller.addListener(_refreshUI);
+  
+}
+void _refreshUI() {
+    if (mounted) setState(() {}); // <-- Nouvelle méthode
   }
+  @override
+  void dispose() {
+  controller.removeListener(_refreshUI); // Désabonnement
+  super.dispose();
+}
+
 
   @override
   Widget build(BuildContext context) {
     double gridSize = MediaQuery.of(context).size.width * 0.95;
     double tileSize = gridSize / boardSize;
-
     return Scaffold(
       appBar: AppBar(title: Text('${controller.joueurActuel.name}')),
       body: Column(
@@ -81,11 +96,25 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   board: board,
                   tileSize: tileSize,
                   onLettrePlacee: (lettre, row, col) {
-                    setState(() {
-                      board[row][col] = lettre;
-                      lettresPoseesCeTour.add(Offset(row.toDouble(), col.toDouble()));
-                      controller.jouerLettre(lettre);
-                    });
+                    if (lettre.estJoker()) {
+                      // Demande à l'utilisateur de choisir une lettre pour le joker
+                      demanderLettrePourJoker(context,widget.langue).then((choisie) {
+                        if (choisie != null) {
+                          setState(() {
+                            lettre.remplace = choisie;// Met à jour la lettre avec celle choisie
+                            board[row][col] = lettre;  // Met à jour le plateau
+                            lettresPoseesCeTour.add(Offset(row.toDouble(), col.toDouble())); // Ajoute la position
+                            controller.jouerLettre(lettre);
+                          });
+                        }
+                      });
+                    } else {
+                      setState(() {
+                        board[row][col] = lettre;  // Si ce n'est pas un joker, place la lettre normalement
+                        lettresPoseesCeTour.add(Offset(row.toDouble(), col.toDouble()));  // Ajoute la position
+                        controller.jouerLettre(lettre);
+                      });
+                    }
                   },
                   onLettreRetiree: (lettre, row, col) {
                     setState(() {
@@ -121,43 +150,36 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                     ),
                   ),
                 ElevatedButton(
-                  onPressed: () {
-                    bool estValide = controller.validerMot(board, lettresDejaPosees, lettresPoseesCeTour);
-                    bool tousValides = verificateur.verifierMots(board, lettresPoseesCeTour);
-                    if (estValide && tousValides) {
-                      lettresDejaPosees.addAll(lettresPoseesCeTour);
-                      controller.finDeTour(board, lettresDejaPosees, lettresPoseesCeTour);
-                      setState(() => _errorMessage = null);
-                    } else {
-                      if (!PlacementValidator.estAligne(lettresPoseesCeTour)) {
-                        setState(() => _errorMessage = "Les lettres doivent être alignées en ligne droite");
+                    onPressed: () {
+                      String errorMsg = controller.erreurMessage(
+                        widget.langue,
+                        board,
+                        lettresDejaPosees,
+                        lettresPoseesCeTour
+                      );
+                      print(lettresPoseesCeTour);
+                      if (errorMsg.isEmpty) {
+                        // Tout est valide
+                        lettresDejaPosees.addAll(lettresPoseesCeTour);
+                        controller.finDeTour(board, lettresDejaPosees, lettresPoseesCeTour);
+                        if (controller.estPartieTerminee()) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FinDePartieScreen(joueurs: controller.getJoueurs),
+                            ),
+                          );
+                          return;
+                        }
+                        setState(() => _errorMessage = null);
+                      } else {
+                        // Afficher l'erreur et retirer les lettres
+                        setState(() => _errorMessage = errorMsg);
                         controller.retirerLettresPosees(board, lettresPoseesCeTour);
-                        return;
                       }
-                      if (!PlacementValidator.allConnected(board, lettresPoseesCeTour)) {
-                        setState(() => _errorMessage = "Les lettres doivent être connectées");
-                        controller.retirerLettresPosees(board, lettresPoseesCeTour);
-                        return;
-                      }
-                      if (controller.estPremierTour() && !PlacementValidator.toucheCentre(lettresPoseesCeTour)) {
-                        setState(() => _errorMessage = "Le premier mot doit passer par la case centrale (★)");
-                        controller.retirerLettresPosees(board, lettresPoseesCeTour);
-                        return;
-                      }
-                      if (!controller.estPremierTour() && !PlacementValidator.estConnecte(board, lettresDejaPosees, lettresPoseesCeTour)) {
-                        setState(() => _errorMessage = "Le mot doit être connecté à un mot existant");
-                        controller.retirerLettresPosees(board, lettresPoseesCeTour);
-                        return;
-                      }
-                    }
-                    if (!tousValides) {
-                      setState(() => _errorMessage = "Mot invalide");
-                      controller.retirerLettresPosees(board, lettresPoseesCeTour);
-                      return;
-                    }
-                  },
-                  child: Text("Envoyer le mot"),
-                ),
+                    },
+                    child: Text("Envoyer le mot"),
+                )
               ],
             ),
           ),
@@ -197,20 +219,30 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   }
 
   Widget _scorePanel() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: controller.getJoueurs.map((joueur) {
-        return Row(
-          children: [
-            Icon(Icons.person, size: 16),
-            SizedBox(width: 4),
-            Text(
-              "${joueur.name} : ${joueur.score} pts",
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    children: controller.getJoueurs.map((joueur) {
+      final bool estActif = joueur == controller.joueurActuel;
+      
+      return Row(
+        children: [
+          Icon(
+            Icons.person,
+            size: 16,
+            color: estActif ? Colors.red : Colors.grey, 
+          ),
+          const SizedBox(width: 4),
+          Text(
+            "${joueur.name} : ${joueur.score} pts",
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: estActif ? Colors.red : Colors.black, 
             ),
-          ],
-        );
-      }).toList(),
-    );
-  }
+          ),
+        ],
+      );
+    }).toList(),
+  );
+}
 }
